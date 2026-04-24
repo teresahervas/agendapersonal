@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react'
 import { Plus, ChevronLeft, ChevronRight, Calendar as CalendarIcon } from 'lucide-react'
-import { Button } from '@/components/ui/Button'
+import { Button, cn } from '@/components/ui/Button'
 import { TaskItem } from '@/components/TaskItem'
 import { format, addDays, subDays, startOfWeek, endOfWeek, eachDayOfInterval, isSameDay } from 'date-fns'
 import { es } from 'date-fns/locale'
