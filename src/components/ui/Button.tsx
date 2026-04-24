@@ -1,5 +1,4 @@
 import * as React from "react"
-import { slot } from "@radix-ui/react-slot" // Wait, I didn't install radix. I'll use simple button.
 import { clsx, type ClassValue } from "clsx"
 import { twMerge } from "tailwind-merge"
 
