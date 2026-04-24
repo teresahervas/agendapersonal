@@ -15,6 +15,7 @@ export type Task = {
   description: string | null;
   is_completed: boolean;
   due_date: string | null;
+  attachment_url?: string | null;
   created_at: string;
 };
 

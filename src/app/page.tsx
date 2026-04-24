@@ -8,21 +8,17 @@ import { format, addDays, subDays, startOfWeek, endOfWeek, eachDayOfInterval, is
 import { es } from 'date-fns/locale'
 import { useAppStore } from '@/store/useAppStore'
 import { motion, AnimatePresence } from 'framer-motion'
+import { useTasks } from '@/hooks/useTasks'
+import { TaskModal } from '@/components/TaskModal'
+import { WeekPlanner } from '@/components/WeekPlanner'
 
 export default function AgendaPage() {
   const { selectedDate, setSelectedDate, viewMode, setViewMode } = useAppStore()
-  const [tasks, setTasks] = useState([
-    { id: '1', title: 'Reunión de equipo', due_date: new Date().toISOString(), is_completed: false, user_id: '1', description: '', created_at: '' },
-    { id: '2', title: 'Enviar reporte semanal', due_date: new Date().toISOString(), is_completed: true, user_id: '1', description: '', created_at: '' },
-    { id: '3', title: 'Comprar café', due_date: null, is_completed: false, user_id: '1', description: '', created_at: '' },
-  ])
+  const { tasks, loading, addTask, toggleTask, deleteTask } = useTasks()
+  const [isModalOpen, setIsModalOpen] = useState(false)
 
-  const handleToggleTask = (id: string, completed: boolean) => {
-    setTasks(tasks.map(t => t.id === id ? { ...t, is_completed: completed } : t))
-  }
-
-  const handleDeleteTask = (id: string) => {
-    setTasks(tasks.filter(t => t.id !== id))
+  const handleSaveTask = async (taskData: { title: string, due_date: string | null, description: string }) => {
+    await addTask(taskData)
   }
 
   const navigateDate = (direction: 'prev' | 'next') => {
@@ -77,7 +73,10 @@ export default function AgendaPage() {
             <ChevronRight size={20} />
           </Button>
         </div>
-        <Button className="gap-2 shadow-lg hover:scale-105 transition-transform">
+        <Button 
+          onClick={() => setIsModalOpen(true)}
+          className="gap-2 shadow-lg hover:scale-105 transition-transform"
+        >
           <Plus size={20} />
           Nueva Tarea
         </Button>
@@ -85,49 +84,58 @@ export default function AgendaPage() {
 
       {/* Content */}
       <div className="grid gap-6">
-        {days.map((day) => (
-          <div key={day.toISOString()} className="space-y-4">
-            {viewMode === 'week' && (
-              <div className={cn(
-                "flex items-center gap-2 text-sm font-semibold sticky top-0 bg-background/80 backdrop-blur-md py-2 z-10",
-                isSameDay(day, new Date()) ? "text-primary" : "text-muted-foreground"
-              )}>
-                <CalendarIcon size={16} />
-                {format(day, "EEEE, d 'de' MMM", { locale: es }).toUpperCase()}
-              </div>
-            )}
-            
-            <div className="space-y-3">
-              <AnimatePresence mode="popLayout">
-                {tasks.map((task) => (
-                  <motion.div
-                    key={task.id}
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, scale: 0.95 }}
-                    transition={{ duration: 0.2 }}
-                  >
-                    <TaskItem 
-                      task={task as any} 
-                      onToggle={handleToggleTask} 
-                      onDelete={handleDeleteTask} 
-                    />
-                  </motion.div>
-                ))}
-              </AnimatePresence>
+        {loading ? (
+          <div className="text-center py-20">Cargando tareas...</div>
+        ) : viewMode === 'week' ? (
+          <WeekPlanner 
+            selectedDate={selectedDate}
+            tasks={tasks}
+            onToggle={toggleTask}
+            onDelete={deleteTask}
+          />
+        ) : (
+          days.map((day) => (
+            <div key={day.toISOString()} className="space-y-4">
+              <div className="space-y-3">
+                <AnimatePresence mode="popLayout">
+                  {tasks
+                    .filter(t => t.due_date && isSameDay(new Date(t.due_date), day))
+                    .map((task) => (
+                      <motion.div
+                        key={task.id}
+                        initial={{ opacity: 0, y: 10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, scale: 0.95 }}
+                        transition={{ duration: 0.2 }}
+                      >
+                        <TaskItem 
+                          task={task} 
+                          onToggle={toggleTask} 
+                          onDelete={deleteTask} 
+                        />
+                      </motion.div>
+                  ))}
+                </AnimatePresence>
 
-              {tasks.length === 0 && (
-                <div className="text-center py-12 border-2 border-dashed rounded-2xl text-muted-foreground">
-                  <p>No hay tareas para este día</p>
-                  <Button variant="link" className="mt-2 text-primary">
-                    Crear una ahora
-                  </Button>
-                </div>
-              )}
+                {tasks.filter(t => t.due_date && isSameDay(new Date(t.due_date), day)).length === 0 && (
+                  <div className="text-center py-12 border-2 border-dashed rounded-2xl text-muted-foreground">
+                    <p>No hay tareas para este día</p>
+                    <Button variant="link" onClick={() => setIsModalOpen(true)} className="mt-2 text-primary">
+                      Crear una ahora
+                    </Button>
+                  </div>
+                )}
+              </div>
             </div>
-          </div>
-        ))}
+          ))
+        )}
       </div>
+
+      <TaskModal 
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        onSave={handleSaveTask}
+      />
     </div>
   )
 }

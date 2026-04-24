@@ -17,6 +17,7 @@ CREATE TABLE tasks (
   description TEXT,
   is_completed BOOLEAN DEFAULT FALSE,
   due_date TIMESTAMP WITH TIME ZONE,
+  attachment_url TEXT,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc'::text, NOW())
 );
 

@@ -1,7 +1,7 @@
 'use client'
 
 import React from 'react'
-import { CheckCircle2, Circle, Clock, MoreVertical, Trash2 } from 'lucide-react'
+import { CheckCircle2, Circle, Clock, MoreVertical, Trash2, Paperclip } from 'lucide-react'
 import { cn } from './ui/Button'
 import { Task } from '@/types'
 import { format } from 'date-fns'
@@ -38,9 +38,23 @@ export function TaskItem({ task, onToggle, onDelete }: TaskItemProps) {
           {task.title}
         </h3>
         {task.due_date && (
-          <div className="flex items-center gap-1.5 mt-1 text-xs text-muted-foreground">
-            <Clock size={12} />
-            {format(new Date(task.due_date), "HH:mm '·' d 'de' MMM", { locale: es })}
+          <div className="flex items-center gap-3 mt-1">
+            <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+              <Clock size={12} />
+              {format(new Date(task.due_date), "HH:mm '·' d 'de' MMM", { locale: es })}
+            </div>
+            {task.attachment_url && (
+              <a 
+                href={task.attachment_url} 
+                target="_blank" 
+                rel="noopener noreferrer"
+                className="flex items-center gap-1 text-[10px] bg-primary/10 text-primary px-2 py-0.5 rounded-full hover:bg-primary/20 transition-colors"
+                onClick={(e) => e.stopPropagation()}
+              >
+                <Paperclip size={10} />
+                Adjunto
+              </a>
+            )}
           </div>
         )}
       </div>
