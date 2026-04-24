@@ -11,7 +11,15 @@ import { FileUploader } from './FileUploader'
 interface TaskModalProps {
   isOpen: boolean
   onClose: () => void
-  onSave: (task: { title: string, due_date: string | null, description: string, attachment_url?: string }) => void
+  onSave: (task: { 
+    title: string, 
+    due_date: string | null, 
+    description: string, 
+    attachment_url?: string,
+    is_recurring?: boolean,
+    recurrence_pattern?: string | null,
+    recurrence_end_date?: string | null
+  }) => void
   task?: Task | null
 }
 
