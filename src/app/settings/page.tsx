@@ -4,6 +4,7 @@ import React from 'react'
 import { Moon, Sun, Palette, User, Bell, Shield, ChevronRight } from 'lucide-react'
 import { Button, cn } from '@/components/ui/Button'
 import { useAppStore } from '@/store/useAppStore'
+import { createClient } from '@/utils/supabase/client'
 
 const colors = [
   { name: 'Azul', value: '#3b82f6' },
@@ -16,6 +17,27 @@ const colors = [
 
 export default function SettingsPage() {
   const { theme, setTheme, primaryColor, setPrimaryColor } = useAppStore()
+  const supabase = createClient()
+
+  const updateProfile = async (updates: any) => {
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) return
+
+    await supabase
+      .from('profiles')
+      .update(updates)
+      .eq('id', user.id)
+  }
+
+  const handleSetTheme = (newTheme: 'light' | 'dark') => {
+    setTheme(newTheme)
+    updateProfile({ theme: newTheme })
+  }
+
+  const handleSetColor = (color: string) => {
+    setPrimaryColor(color)
+    updateProfile({ primary_color: color })
+  }
 
   return (
     <div className="max-w-2xl mx-auto space-y-8 pb-12">
@@ -32,7 +54,7 @@ export default function SettingsPage() {
           </div>
           <div>
             <h2 className="text-xl font-bold">Tere</h2>
-            <p className="text-sm text-muted-foreground">usuario@ejemplo.com</p>
+            <p className="text-sm text-muted-foreground">teresa.hervas@gmail.com</p>
           </div>
           <Button variant="outline" size="sm" className="ml-auto">Editar Perfil</Button>
         </div>
@@ -54,7 +76,7 @@ export default function SettingsPage() {
             </div>
             <div className="flex items-center gap-1 bg-muted p-1 rounded-xl">
               <button 
-                onClick={() => setTheme('light')}
+                onClick={() => handleSetTheme('light')}
                 className={cn(
                   "p-2 rounded-lg transition-all",
                   theme === 'light' ? "bg-background shadow-sm text-primary" : "text-muted-foreground hover:text-foreground"
@@ -63,7 +85,7 @@ export default function SettingsPage() {
                 <Sun size={20} />
               </button>
               <button 
-                onClick={() => setTheme('dark')}
+                onClick={() => handleSetTheme('dark')}
                 className={cn(
                   "p-2 rounded-lg transition-all",
                   theme === 'dark' ? "bg-background shadow-sm text-primary" : "text-muted-foreground hover:text-foreground"
@@ -84,7 +106,7 @@ export default function SettingsPage() {
               {colors.map((color) => (
                 <button
                   key={color.value}
-                  onClick={() => setPrimaryColor(color.value)}
+                  onClick={() => handleSetColor(color.value)}
                   className={cn(
                     "w-10 h-10 rounded-full border-4 transition-all hover:scale-110",
                     primaryColor === color.value ? "border-primary-foreground ring-2 ring-primary" : "border-transparent"
