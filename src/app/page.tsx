@@ -13,7 +13,8 @@ import { TaskModal } from '@/components/TaskModal'
 import { WeekPlanner } from '@/components/WeekPlanner'
 
 export default function AgendaPage() {
-  const { selectedDate, setSelectedDate, viewMode, setViewMode } = useAppStore()
+  const { selectedDate: storeDate, setSelectedDate, viewMode, setViewMode } = useAppStore()
+  const selectedDate = storeDate instanceof Date ? storeDate : new Date(storeDate)
   const { tasks, loading, addTask, toggleTask, deleteTask } = useTasks()
   const [isModalOpen, setIsModalOpen] = useState(false)
 

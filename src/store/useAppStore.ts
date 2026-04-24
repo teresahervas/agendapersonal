@@ -1,5 +1,5 @@
 import { create } from 'zustand'
-import { persist } from 'zustand/middleware'
+import { persist, createJSONStorage } from 'zustand/middleware'
 
 interface AppState {
   theme: 'light' | 'dark'
@@ -26,6 +26,13 @@ export const useAppStore = create<AppState>()(
     }),
     {
       name: 'agenda-storage',
+      storage: createJSONStorage(() => localStorage),
+      onRehydrateStorage: () => (state) => {
+        if (state && state.selectedDate) {
+          // Ensure selectedDate is a Date object after rehydration
+          state.selectedDate = new Date(state.selectedDate)
+        }
+      },
     }
   )
 )

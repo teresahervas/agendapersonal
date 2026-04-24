@@ -14,7 +14,8 @@ interface WeekPlannerProps {
   onDelete: (id: string) => void
 }
 
-export function WeekPlanner({ selectedDate, tasks, onToggle, onDelete }: WeekPlannerProps) {
+export function WeekPlanner({ selectedDate: rawDate, tasks, onToggle, onDelete }: WeekPlannerProps) {
+  const selectedDate = rawDate instanceof Date ? rawDate : new Date(rawDate)
   const start = startOfWeek(selectedDate, { weekStartsOn: 1 })
   
   // Split into left and right pages (3 days left, 4 days right)
