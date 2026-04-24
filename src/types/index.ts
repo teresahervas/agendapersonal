@@ -16,6 +16,9 @@ export type Task = {
   is_completed: boolean;
   due_date: string | null;
   attachment_url?: string | null;
+  is_recurring?: boolean;
+  recurrence_pattern?: 'daily' | 'weekly' | 'monthly' | null;
+  recurrence_end_date?: string | null;
   created_at: string;
 };
 

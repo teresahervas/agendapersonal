@@ -1,9 +1,10 @@
 'use client'
 
-import React, { useState } from 'react'
-import { X, Calendar as CalendarIcon, Clock, Type, AlignLeft, Upload } from 'lucide-react'
+import React, { useState, useEffect } from 'react'
+import { X, Calendar as CalendarIcon, Clock, Type, AlignLeft, Upload, RefreshCw } from 'lucide-react'
 import { Button, cn } from './ui/Button'
 import { motion, AnimatePresence } from 'framer-motion'
+import { Task } from '@/types'
 
 import { FileUploader } from './FileUploader'
 
@@ -11,22 +12,63 @@ interface TaskModalProps {
   isOpen: boolean
   onClose: () => void
   onSave: (task: { title: string, due_date: string | null, description: string, attachment_url?: string }) => void
+  task?: Task | null
 }
 
-export function TaskModal({ isOpen, onClose, onSave }: TaskModalProps) {
+export function TaskModal({ isOpen, onClose, onSave, task }: TaskModalProps) {
   const [title, setTitle] = useState('')
   const [description, setDescription] = useState('')
   const [date, setDate] = useState(new Date().toISOString().split('T')[0])
   const [time, setTime] = useState('12:00')
   const [includeTime, setIncludeTime] = useState(false)
   const [attachmentUrl, setAttachmentUrl] = useState<string | undefined>()
+  const [isRecurring, setIsRecurring] = useState(false)
+  const [recurrencePattern, setRecurrencePattern] = useState<'daily' | 'weekly' | 'monthly'>('daily')
+  const [recurrenceEndDate, setRecurrenceEndDate] = useState<string>('')
+
+  useEffect(() => {
+    if (task) {
+      setTitle(task.title || '')
+      setDescription(task.description || '')
+      if (task.due_date) {
+        const d = new Date(task.due_date)
+        setDate(d.toISOString().split('T')[0])
+        const hours = d.getHours().toString().padStart(2, '0')
+        const mins = d.getMinutes().toString().padStart(2, '0')
+        setTime(`${hours}:${mins}`)
+        setIncludeTime(hours !== '00' || mins !== '00')
+      }
+      setAttachmentUrl(task.attachment_url || undefined)
+      setIsRecurring(task.is_recurring || false)
+      setRecurrencePattern(task.recurrence_pattern || 'daily')
+      setRecurrenceEndDate(task.recurrence_end_date || '')
+    } else {
+      setTitle('')
+      setDescription('')
+      setDate(new Date().toISOString().split('T')[0])
+      setTime('12:00')
+      setIncludeTime(false)
+      setAttachmentUrl(undefined)
+      setIsRecurring(false)
+      setRecurrencePattern('daily')
+      setRecurrenceEndDate('')
+    }
+  }, [task, isOpen])
 
   const handleSave = () => {
     if (!title) return
     const due_date = date 
       ? (includeTime ? new Date(`${date}T${time}`).toISOString() : new Date(`${date}T00:00:00`).toISOString()) 
       : null
-    onSave({ title, due_date, description, attachment_url: attachmentUrl })
+    onSave({ 
+      title, 
+      due_date, 
+      description, 
+      attachment_url: attachmentUrl,
+      is_recurring: isRecurring,
+      recurrence_pattern: isRecurring ? recurrencePattern : null,
+      recurrence_end_date: isRecurring && recurrenceEndDate ? recurrenceEndDate : null
+    })
     setTitle('')
     setDescription('')
     setAttachmentUrl(undefined)
@@ -136,6 +178,56 @@ export function TaskModal({ isOpen, onClose, onSave }: TaskModalProps) {
                     <Upload size={14} /> Adjuntos
                   </label>
                   <FileUploader onUpload={setAttachmentUrl} />
+                </div>
+
+                {/* Recurrence */}
+                <div className="space-y-4 pt-4 border-t">
+                  <div className="flex items-center gap-2 cursor-pointer" onClick={() => setIsRecurring(!isRecurring)}>
+                    <div className={cn(
+                      "w-10 h-5 rounded-full relative transition-colors",
+                      isRecurring ? "bg-primary" : "bg-muted"
+                    )}>
+                      <div className={cn(
+                        "absolute top-1 left-1 w-3 h-3 rounded-full bg-white transition-transform",
+                        isRecurring && "translate-x-5"
+                      )} />
+                    </div>
+                    <span className="text-sm font-medium flex items-center gap-2">
+                      <RefreshCw size={14} /> Repetir tarea
+                    </span>
+                  </div>
+
+                  {isRecurring && (
+                    <motion.div 
+                      initial={{ height: 0, opacity: 0 }}
+                      animate={{ height: 'auto', opacity: 1 }}
+                      className="space-y-4 overflow-hidden"
+                    >
+                      <div className="grid grid-cols-2 gap-4">
+                        <div className="space-y-2">
+                          <label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Frecuencia</label>
+                          <select 
+                            className="w-full bg-muted/50 border rounded-xl p-2 text-sm focus:outline-none"
+                            value={recurrencePattern}
+                            onChange={(e) => setRecurrencePattern(e.target.value as any)}
+                          >
+                            <option value="daily">Diariamente</option>
+                            <option value="weekly">Semanalmente</option>
+                            <option value="monthly">Mensualmente</option>
+                          </select>
+                        </div>
+                        <div className="space-y-2">
+                          <label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Fecha Fin (Opcional)</label>
+                          <input 
+                            type="date"
+                            className="w-full bg-muted/50 border rounded-xl p-2 text-sm focus:outline-none"
+                            value={recurrenceEndDate}
+                            onChange={(e) => setRecurrenceEndDate(e.target.value)}
+                          />
+                        </div>
+                      </div>
+                    </motion.div>
+                  )}
                 </div>
               </div>
 

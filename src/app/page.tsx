@@ -11,15 +11,32 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { useTasks } from '@/hooks/useTasks'
 import { TaskModal } from '@/components/TaskModal'
 import { WeekPlanner } from '@/components/WeekPlanner'
+import { Task } from '@/types'
 
 export default function AgendaPage() {
   const { selectedDate: storeDate, setSelectedDate, viewMode, setViewMode } = useAppStore()
   const selectedDate = storeDate instanceof Date ? storeDate : new Date(storeDate)
-  const { tasks, loading, addTask, toggleTask, deleteTask } = useTasks()
+  const { tasks, loading, addTask, toggleTask, deleteTask, updateTask } = useTasks()
   const [isModalOpen, setIsModalOpen] = useState(false)
+  const [editingTask, setEditingTask] = useState<Task | null>(null)
 
-  const handleSaveTask = async (taskData: { title: string, due_date: string | null, description: string }) => {
-    await addTask(taskData)
+  const handleSaveTask = async (taskData: any) => {
+    if (editingTask) {
+      await updateTask(editingTask.id, taskData)
+    } else {
+      await addTask(taskData)
+    }
+    setEditingTask(null)
+  }
+
+  const handleEditTask = (task: Task) => {
+    setEditingTask(task)
+    setIsModalOpen(true)
+  }
+
+  const handleCloseModal = () => {
+    setIsModalOpen(false)
+    setEditingTask(null)
   }
 
   const navigateDate = (direction: 'prev' | 'next') => {
@@ -30,6 +47,22 @@ export default function AgendaPage() {
   const days = viewMode === 'week' 
     ? eachDayOfInterval({ start: startOfWeek(selectedDate, { weekStartsOn: 1 }), end: endOfWeek(selectedDate, { weekStartsOn: 1 }) })
     : [selectedDate]
+
+  const isTaskVisibleOnDay = (task: Task, day: Date) => {
+    if (!task.due_date) return false
+    const taskDate = new Date(task.due_date)
+    if (isSameDay(taskDate, day)) return true
+    
+    if (!task.is_recurring) return false
+    if (taskDate > day) return false 
+    if (task.recurrence_end_date && new Date(task.recurrence_end_date) < day) return false 
+    
+    if (task.recurrence_pattern === 'daily') return true
+    if (task.recurrence_pattern === 'weekly') return taskDate.getDay() === day.getDay()
+    if (task.recurrence_pattern === 'monthly') return taskDate.getDate() === day.getDate()
+    
+    return false
+  }
 
   return (
     <div className="max-w-4xl mx-auto space-y-8">
@@ -93,6 +126,7 @@ export default function AgendaPage() {
             tasks={tasks}
             onToggle={toggleTask}
             onDelete={deleteTask}
+            onEdit={handleEditTask}
           />
         ) : (
           days.map((day) => (
@@ -100,10 +134,10 @@ export default function AgendaPage() {
               <div className="space-y-3">
                 <AnimatePresence mode="popLayout">
                   {tasks
-                    .filter(t => t.due_date && isSameDay(new Date(t.due_date), day))
+                    .filter(t => isTaskVisibleOnDay(t, day))
                     .map((task) => (
                       <motion.div
-                        key={task.id}
+                        key={`${task.id}-${day.toISOString()}`}
                         initial={{ opacity: 0, y: 10 }}
                         animate={{ opacity: 1, y: 0 }}
                         exit={{ opacity: 0, scale: 0.95 }}
@@ -113,12 +147,13 @@ export default function AgendaPage() {
                           task={task} 
                           onToggle={toggleTask} 
                           onDelete={deleteTask} 
+                          onEdit={handleEditTask}
                         />
                       </motion.div>
                   ))}
                 </AnimatePresence>
 
-                {tasks.filter(t => t.due_date && isSameDay(new Date(t.due_date), day)).length === 0 && (
+                {tasks.filter(t => isTaskVisibleOnDay(t, day)).length === 0 && (
                   <div className="text-center py-12 border-2 border-dashed rounded-2xl text-muted-foreground">
                     <p>No hay tareas para este día</p>
                     <Button variant="link" onClick={() => setIsModalOpen(true)} className="mt-2 text-primary">
@@ -134,8 +169,9 @@ export default function AgendaPage() {
 
       <TaskModal 
         isOpen={isModalOpen}
-        onClose={() => setIsModalOpen(false)}
+        onClose={handleCloseModal}
         onSave={handleSaveTask}
+        task={editingTask}
       />
     </div>
   )

@@ -12,11 +12,28 @@ interface WeekPlannerProps {
   tasks: Task[]
   onToggle: (id: string, completed: boolean) => void
   onDelete: (id: string) => void
+  onEdit: (task: Task) => void
 }
 
-export function WeekPlanner({ selectedDate: rawDate, tasks, onToggle, onDelete }: WeekPlannerProps) {
+export function WeekPlanner({ selectedDate: rawDate, tasks, onToggle, onDelete, onEdit }: WeekPlannerProps) {
   const selectedDate = rawDate instanceof Date ? rawDate : new Date(rawDate)
   const start = startOfWeek(selectedDate, { weekStartsOn: 1 })
+
+  const isTaskVisibleOnDay = (task: Task, day: Date) => {
+    if (!task.due_date) return false
+    const taskDate = new Date(task.due_date)
+    if (isSameDay(taskDate, day)) return true
+    
+    if (!task.is_recurring) return false
+    if (taskDate > day) return false 
+    if (task.recurrence_end_date && new Date(task.recurrence_end_date) < day) return false 
+    
+    if (task.recurrence_pattern === 'daily') return true
+    if (task.recurrence_pattern === 'weekly') return taskDate.getDay() === day.getDay()
+    if (task.recurrence_pattern === 'monthly') return taskDate.getDate() === day.getDate()
+    
+    return false
+  }
   
   // Split into left and right pages (3 days left, 4 days right)
   const leftDays = [0, 1, 2].map(i => addDays(start, i))
@@ -33,7 +50,7 @@ export function WeekPlanner({ selectedDate: rawDate, tasks, onToggle, onDelete }
 
       <div className="pl-6 space-y-8">
         {days.map((day) => {
-          const dayTasks = tasks.filter(t => t.due_date && isSameDay(new Date(t.due_date), day))
+          const dayTasks = tasks.filter(t => isTaskVisibleOnDay(t, day))
           const isToday = isSameDay(day, new Date())
           
           return (
@@ -53,10 +70,11 @@ export function WeekPlanner({ selectedDate: rawDate, tasks, onToggle, onDelete }
               <div className="space-y-2 min-h-[60px]">
                 {dayTasks.map(task => (
                   <TaskItem 
-                    key={task.id} 
+                    key={`${task.id}-${day.toISOString()}`} 
                     task={task} 
                     onToggle={onToggle} 
                     onDelete={onDelete} 
+                    onEdit={onEdit}
                   />
                 ))}
                 {dayTasks.length === 0 && (

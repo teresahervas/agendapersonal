@@ -61,5 +61,18 @@ export function useTasks() {
     }
   }
 
-  return { tasks, loading, addTask, toggleTask, deleteTask, refresh: fetchTasks }
+  async function updateTask(id: string, updates: Partial<Task>) {
+    const { data, error } = await supabase
+      .from('tasks')
+      .update(updates)
+      .eq('id', id)
+      .select()
+      .single()
+
+    if (!error && data) {
+      setTasks(tasks.map(t => t.id === id ? data : t))
+    }
+  }
+
+  return { tasks, loading, addTask, toggleTask, deleteTask, updateTask, refresh: fetchTasks }
 }

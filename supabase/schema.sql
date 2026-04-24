@@ -19,6 +19,9 @@ CREATE TABLE tasks (
   is_completed BOOLEAN DEFAULT FALSE,
   due_date TIMESTAMP WITH TIME ZONE,
   attachment_url TEXT,
+  is_recurring BOOLEAN DEFAULT FALSE,
+  recurrence_pattern TEXT, -- 'daily', 'weekly', 'monthly'
+  recurrence_end_date DATE,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc'::text, NOW())
 );
 
