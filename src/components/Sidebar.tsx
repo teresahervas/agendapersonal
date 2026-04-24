@@ -13,6 +13,8 @@ import {
   LogOut
 } from 'lucide-react'
 import { cn } from './ui/Button'
+import { createClient } from '@/utils/supabase/client'
+import { useRouter } from 'next/navigation'
 
 const navItems = [
   { name: 'Agenda', href: '/', icon: LayoutDashboard },
@@ -24,6 +26,14 @@ const navItems = [
 
 export function Sidebar() {
   const pathname = usePathname()
+  const router = useRouter()
+  const supabase = createClient()
+
+  const handleLogout = async () => {
+    await supabase.auth.signOut()
+    router.push('/login')
+    router.refresh()
+  }
 
   return (
     <aside className="w-64 h-screen border-r bg-card flex flex-col fixed left-0 top-0 transition-all duration-300">
@@ -58,7 +68,7 @@ export function Sidebar() {
       <div className="p-4 border-t">
         <button 
           className="flex items-center gap-3 px-3 py-2 w-full rounded-lg text-sm font-medium text-destructive hover:bg-destructive/10 transition-all"
-          onClick={() => {/* TODO: Sign out */}}
+          onClick={handleLogout}
         >
           <LogOut size={18} />
           Cerrar sesión

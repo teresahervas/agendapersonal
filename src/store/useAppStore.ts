@@ -4,10 +4,12 @@ import { persist, createJSONStorage } from 'zustand/middleware'
 interface AppState {
   theme: 'light' | 'dark'
   primaryColor: string
+  bgColor: string
   selectedDate: Date
   viewMode: 'day' | 'week'
   setTheme: (theme: 'light' | 'dark') => void
   setPrimaryColor: (color: string) => void
+  setBgColor: (color: string) => void
   setSelectedDate: (date: Date) => void
   setViewMode: (mode: 'day' | 'week') => void
 }
@@ -17,10 +19,12 @@ export const useAppStore = create<AppState>()(
     (set) => ({
       theme: 'light',
       primaryColor: '#3b82f6',
+      bgColor: '#ffffff',
       selectedDate: new Date(),
       viewMode: 'day',
       setTheme: (theme) => set({ theme }),
       setPrimaryColor: (primaryColor) => set({ primaryColor }),
+      setBgColor: (bgColor) => set({ bgColor }),
       setSelectedDate: (selectedDate) => set({ selectedDate }),
       setViewMode: (viewMode) => set({ viewMode }),
     }),

@@ -15,8 +15,17 @@ const colors = [
   { name: 'Esmeralda', value: '#10b981' },
 ]
 
+const bgColors = [
+  { name: 'Blanco', value: '#ffffff' },
+  { name: 'Crema', value: '#fffbf0' },
+  { name: 'Gris', value: '#f8fafc' },
+  { name: 'Azul Pálido', value: '#f0f9ff' },
+  { name: 'Verde Pálido', value: '#f0fdf4' },
+  { name: 'Rosa Pálido', value: '#fdf2f8' },
+]
+
 export default function SettingsPage() {
-  const { theme, setTheme, primaryColor, setPrimaryColor } = useAppStore()
+  const { theme, setTheme, primaryColor, setPrimaryColor, bgColor, setBgColor } = useAppStore()
   const supabase = createClient()
 
   const updateProfile = async (updates: any) => {
@@ -37,6 +46,11 @@ export default function SettingsPage() {
   const handleSetColor = (color: string) => {
     setPrimaryColor(color)
     updateProfile({ primary_color: color })
+  }
+
+  const handleSetBgColor = (color: string) => {
+    setBgColor(color)
+    updateProfile({ bg_color: color })
   }
 
   return (
@@ -110,6 +124,28 @@ export default function SettingsPage() {
                   className={cn(
                     "w-10 h-10 rounded-full border-4 transition-all hover:scale-110",
                     primaryColor === color.value ? "border-primary-foreground ring-2 ring-primary" : "border-transparent"
+                  )}
+                  style={{ backgroundColor: color.value }}
+                  title={color.name}
+                />
+              ))}
+            </div>
+          </div>
+
+          {/* Background Color */}
+          <div className="p-6">
+            <div className="space-y-0.5 mb-4">
+              <p className="font-medium">Color de Fondo</p>
+              <p className="text-sm text-muted-foreground">Personaliza el tono del fondo de tu agenda</p>
+            </div>
+            <div className="flex flex-wrap gap-3">
+              {bgColors.map((color) => (
+                <button
+                  key={color.value}
+                  onClick={() => handleSetBgColor(color.value)}
+                  className={cn(
+                    "w-10 h-10 rounded-xl border-4 transition-all hover:scale-110",
+                    bgColor === color.value ? "border-primary ring-2 ring-primary/20" : "border-muted"
                   )}
                   style={{ backgroundColor: color.value }}
                   title={color.name}

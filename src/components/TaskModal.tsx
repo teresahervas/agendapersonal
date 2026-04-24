@@ -18,11 +18,14 @@ export function TaskModal({ isOpen, onClose, onSave }: TaskModalProps) {
   const [description, setDescription] = useState('')
   const [date, setDate] = useState(new Date().toISOString().split('T')[0])
   const [time, setTime] = useState('12:00')
+  const [includeTime, setIncludeTime] = useState(false)
   const [attachmentUrl, setAttachmentUrl] = useState<string | undefined>()
 
   const handleSave = () => {
     if (!title) return
-    const due_date = date ? new Date(`${date}T${time}`).toISOString() : null
+    const due_date = date 
+      ? (includeTime ? new Date(`${date}T${time}`).toISOString() : new Date(`${date}T00:00:00`).toISOString()) 
+      : null
     onSave({ title, due_date, description, attachment_url: attachmentUrl })
     setTitle('')
     setDescription('')
@@ -73,28 +76,44 @@ export function TaskModal({ isOpen, onClose, onSave }: TaskModalProps) {
                 </div>
 
                 {/* Date & Time */}
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <label className="text-xs font-bold uppercase tracking-wider text-muted-foreground flex items-center gap-2">
-                      <CalendarIcon size={14} /> Fecha
-                    </label>
-                    <input 
-                      type="date"
-                      className="w-full bg-muted/50 border rounded-xl p-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all"
-                      value={date}
-                      onChange={(e) => setDate(e.target.value)}
-                    />
+                <div className="space-y-4">
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <label className="text-xs font-bold uppercase tracking-wider text-muted-foreground flex items-center gap-2">
+                        <CalendarIcon size={14} /> Fecha
+                      </label>
+                      <input 
+                        type="date"
+                        className="w-full bg-muted/50 border rounded-xl p-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all"
+                        value={date}
+                        onChange={(e) => setDate(e.target.value)}
+                      />
+                    </div>
+                    <div className={cn("space-y-2 transition-opacity", !includeTime && "opacity-50")}>
+                      <label className="text-xs font-bold uppercase tracking-wider text-muted-foreground flex items-center gap-2">
+                        <Clock size={14} /> Hora
+                      </label>
+                      <input 
+                        type="time"
+                        disabled={!includeTime}
+                        className="w-full bg-muted/50 border rounded-xl p-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all"
+                        value={time}
+                        onChange={(e) => setTime(e.target.value)}
+                      />
+                    </div>
                   </div>
-                  <div className="space-y-2">
-                    <label className="text-xs font-bold uppercase tracking-wider text-muted-foreground flex items-center gap-2">
-                      <Clock size={14} /> Hora
-                    </label>
-                    <input 
-                      type="time"
-                      className="w-full bg-muted/50 border rounded-xl p-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all"
-                      value={time}
-                      onChange={(e) => setTime(e.target.value)}
-                    />
+                  
+                  <div className="flex items-center gap-2 cursor-pointer" onClick={() => setIncludeTime(!includeTime)}>
+                    <div className={cn(
+                      "w-10 h-5 rounded-full relative transition-colors",
+                      includeTime ? "bg-primary" : "bg-muted"
+                    )}>
+                      <div className={cn(
+                        "absolute top-1 left-1 w-3 h-3 rounded-full bg-white transition-transform",
+                        includeTime && "translate-x-5"
+                      )} />
+                    </div>
+                    <span className="text-sm font-medium">Incluir hora específica</span>
                   </div>
                 </div>
 

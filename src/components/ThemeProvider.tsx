@@ -4,13 +4,20 @@ import React, { useEffect } from 'react'
 import { useAppStore } from '@/store/useAppStore'
 
 export function ThemeProvider({ children }: { children: React.ReactNode }) {
-  const { theme, primaryColor } = useAppStore()
+  const { theme, primaryColor, bgColor } = useAppStore()
 
   useEffect(() => {
     // Apply theme
     const root = window.document.documentElement
     root.classList.remove('light', 'dark')
     root.classList.add(theme)
+
+    // Apply background color
+    root.style.setProperty('--background-hex', bgColor)
+    // Convert to HSL for the --background variable if needed, 
+    // but for background-color we can just use the hex directly or map it.
+    // Let's create a custom variable --bg-custom
+    root.style.setProperty('--bg-custom', bgColor)
 
     // Apply primary color
     // We need to convert hex to HSL for the CSS variables

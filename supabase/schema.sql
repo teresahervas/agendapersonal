@@ -6,6 +6,7 @@ CREATE TABLE profiles (
   avatar_url TEXT,
   theme TEXT DEFAULT 'light' CHECK (theme IN ('light', 'dark')),
   primary_color TEXT DEFAULT '#3b82f6',
+  bg_color TEXT DEFAULT '#ffffff',
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc'::text, NOW())
 );
 
